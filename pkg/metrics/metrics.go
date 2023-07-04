@@ -32,6 +32,7 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"k8s.io/utils/clock"
 
@@ -208,6 +209,10 @@ func New(log logr.Logger, c clock.Clock) *Metrics {
 
 // NewServer registers Prometheus metrics and returns a new Prometheus metrics HTTP server.
 func (m *Metrics) NewServer(ln net.Listener) *http.Server {
+	m.registry.MustRegister(collectors.NewBuildInfoCollector())
+	m.registry.MustRegister(collectors.NewGoCollector(
+		collectors.WithGoCollectorRuntimeMetrics(collectors.MetricsAll),
+	))
 	m.registry.MustRegister(m.clockTimeSeconds)
 	m.registry.MustRegister(m.clockTimeSecondsGauge)
 	m.registry.MustRegister(m.certificateExpiryTimeSeconds)
